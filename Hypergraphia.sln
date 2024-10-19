@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hypergraphia.MAUI", "Hypergraphia.MAUI\Hypergraphia.MAUI.csproj", "{34CC5317-069D-43EE-B580-EBBC4110D746}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hypergraphia.Core", "Hypergraphia.Core\Hypergraphia.Core.csproj", "{77BCC3A3-B4A6-4F92-96C6-5D36E1558AA3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hypergraphia.Core.Tests", "Hypergraphia.Core.Tests\Hypergraphia.Core.Tests.csproj", "{2F96B4E1-B537-4677-9868-3BD0F6026599}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hypergraphia.Console", "Hypergraphia.Console\Hypergraphia.Console.csproj", "{2C3DAD90-4438-4A51-AE91-F8244A3FF8DE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{34CC5317-069D-43EE-B580-EBBC4110D746}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34CC5317-069D-43EE-B580-EBBC4110D746}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34CC5317-069D-43EE-B580-EBBC4110D746}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34CC5317-069D-43EE-B580-EBBC4110D746}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77BCC3A3-B4A6-4F92-96C6-5D36E1558AA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77BCC3A3-B4A6-4F92-96C6-5D36E1558AA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77BCC3A3-B4A6-4F92-96C6-5D36E1558AA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77BCC3A3-B4A6-4F92-96C6-5D36E1558AA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F96B4E1-B537-4677-9868-3BD0F6026599}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F96B4E1-B537-4677-9868-3BD0F6026599}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F96B4E1-B537-4677-9868-3BD0F6026599}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F96B4E1-B537-4677-9868-3BD0F6026599}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C3DAD90-4438-4A51-AE91-F8244A3FF8DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C3DAD90-4438-4A51-AE91-F8244A3FF8DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C3DAD90-4438-4A51-AE91-F8244A3FF8DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C3DAD90-4438-4A51-AE91-F8244A3FF8DE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
