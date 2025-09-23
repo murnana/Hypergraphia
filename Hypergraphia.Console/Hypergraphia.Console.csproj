@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PublishAot>true</PublishAot>
-        <InvariantGlobalization>true</InvariantGlobalization>
+        <InvariantGlobalization>false</InvariantGlobalization>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -19,6 +19,11 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="9.0.9" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+      <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
       <ProjectReference Include="..\Hypergraphia.Core\Hypergraphia.Core.csproj" />
     </ItemGroup>
 
