@@ -1,0 +1,8 @@
+{
+  "includeCoAuthoredBy": true,
+  "permissions": {
+    "disableBypassPermissionsMode": "disable"
+  },
+  "disableAllHooks": true,
+  "enableAllProjectMcpServers": false
+}

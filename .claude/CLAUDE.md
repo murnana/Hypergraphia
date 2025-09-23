@@ -60,6 +60,25 @@ dotnet publish Hypergraphia.MAUI -c Release -f net8.0-android
 - **Warnings as Errors**: Enabled in both Debug and Release configurations
 - **Testing Framework**: NUnit 4.x with NUnit3TestAdapter
 
+### Documentation Standards
+
+- **XML Documentation**: All public classes, methods, and properties must include comprehensive XML documentation comments
+- **Comment Language**: All comments and documentation must be written in Japanese
+- **Documentation Style**: Use clear, concise descriptions that explain the purpose, parameters, return values, and any important behavior
+- **Parameter Documentation**: Document all parameters including their purpose and any constraints
+- **Return Value Documentation**: Clearly describe what the method returns and when it might return null
+- **Exception Documentation**: Document any exceptions that might be thrown using `<exception>` tags
+
+### Development Methodology
+
+- **Test-Driven Development (TDD)**: All new features must be developed using TDD approach
+  - Write failing tests first
+  - Implement minimal code to make tests pass
+  - Refactor code while keeping tests green
+- **Test Coverage**: Maintain high test coverage for all business logic
+- **Test Structure**: Use AAA pattern (Arrange, Act, Assert) for test organization
+- **Test Naming**: Use descriptive Japanese test method names that explain the scenario being tested
+
 ## Project-Specific Notes
 
 ### MAUI Project
