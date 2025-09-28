@@ -5,271 +5,407 @@ using Hypergraphia.Core.Domain.Repositories;
 using Hypergraphia.Core.Domain.Services;
 using Moq;
 
-namespace Hypergraphia.Core.Tests.Application.UseCases;
-
-/// <summary>
-/// GetEmailsUseCaseの単体テストです。
-/// ユースケースのビジネスロジックをモックを使用してテストします。
-/// </summary>
-[TestFixture]
-public class GetEmailsUseCaseTests
+namespace Hypergraphia.Core.Tests.Application.UseCases
 {
-    private Mock<IEmailRepository> _mockEmailRepository = null!;
-    private Mock<IEmailDomainService> _mockDomainService = null!;
-    private GetEmailsUseCase _useCase = null!;
-
-    [SetUp]
-    public void Setup()
+    /// <summary>
+    /// GetEmailsUseCaseの単体テストです。
+    /// ユースケースのビジネスロジックをモックを使用してテストします。
+    /// </summary>
+    [TestFixture]
+    public class GetEmailsUseCaseTests
     {
-        _mockEmailRepository = new Mock<IEmailRepository>();
-        _mockDomainService = new Mock<IEmailDomainService>();
-        _useCase = new GetEmailsUseCase(_mockEmailRepository.Object, _mockDomainService.Object);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_正常なリクエスト_メールが取得される()
-    {
-        // Arrange
-        var request = new GetEmailsRequestDto
+        [SetUp]
+        public void Setup()
         {
-            Query = "from:test@example.com",
-            MaxResults = 10,
-            IncludeSpamTrash = false
-        };
+            _mockEmailRepository = new();
+            _mockDomainService = new();
+            _useCase = new(emailRepository: _mockEmailRepository.Object, domainService: _mockDomainService.Object);
+        }
 
-        var emailMessage = new EmailMessage
+        private Mock<IEmailRepository>    _mockEmailRepository = null!;
+        private Mock<IEmailDomainService> _mockDomainService   = null!;
+        private GetEmailsUseCase          _useCase             = null!;
+
+        [Test]
+        public async Task ExecuteAsync_正常なリクエスト_メールが取得される()
         {
-            Id = "msg123",
-            ThreadId = "thread456",
-            Subject = "テストメール",
-            From = "test@example.com",
-            To = "recipient@example.com",
-            ReceivedDate = new DateTime(2025, 1, 15, 10, 0, 0),
-            Body = "テスト本文",
-            IsRead = false,
-            IsImportant = false
-        };
+            // Arrange
+            var request = new GetEmailsRequestDto
+            {
+                Query            = "from:test@example.com",
+                MaxResults       = 10,
+                IncludeSpamTrash = false
+            };
 
-        var sanitizedEmail = new EmailMessage
+            var emailMessage = new GmailMessage(
+                id: "msg123",
+                threadId: "thread456",
+                subject: "テストメール",
+                from: "test@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: new(
+                    year: 2025,
+                    month: 1,
+                    day: 15,
+                    hour: 10,
+                    minute: 0,
+                    second: 0
+                ),
+                body: "テスト本文",
+                isRead: false,
+                isImportant: false,
+                labels: new(),
+                attachments: new()
+            );
+
+            var sanitizedEmail = new GmailMessage(
+                id: emailMessage.Id,
+                threadId: emailMessage.ThreadId,
+                subject: emailMessage.Subject,
+                from: emailMessage.From,
+                to: emailMessage.To,
+                cc: emailMessage.Cc,
+                bcc: emailMessage.Bcc,
+                receivedDate: emailMessage.ReceivedDate,
+                body: "サニタイズされた本文",
+                isRead: emailMessage.IsRead,
+                isImportant: emailMessage.IsImportant,
+                labels: emailMessage.Labels,
+                attachments: emailMessage.Attachments
+            );
+
+            _mockEmailRepository
+                .Setup(expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(value: new[] { emailMessage });
+
+            _mockDomainService
+                .Setup(expression: x => x.SanitizeEmailContentAsync(It.IsAny<GmailMessage>()))
+                .ReturnsAsync(value: sanitizedEmail);
+
+            // Act
+            var result = await _useCase.ExecuteAsync(request: request);
+
+            // Assert
+            Assert.That(actual: result, expression: Is.Not.Null);
+            Assert.That(actual: result.Emails, expression: Has.Count.EqualTo(expected: 1));
+            Assert.That(actual: result.Emails[index: 0].Id, expression: Is.EqualTo(expected: "msg123"));
+            Assert.That(actual: result.Emails[index: 0].Subject, expression: Is.EqualTo(expected: "テストメール"));
+            Assert.That(actual: result.Emails[index: 0].From, expression: Is.EqualTo(expected: "test@example.com"));
+            Assert.That(actual: result.Emails[index: 0].Body, expression: Is.EqualTo(expected: "サニタイズされた本文"));
+
+            _mockEmailRepository.Verify(
+                expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()),
+                times: Times.Once
+            );
+            _mockDomainService.Verify(
+                expression: x => x.SanitizeEmailContentAsync(It.IsAny<GmailMessage>()),
+                times: Times.Once
+            );
+        }
+
+        [Test]
+        public async Task ExecuteAsync_クエリパラメータ_リポジトリに正しく渡される()
         {
-            Id = emailMessage.Id,
-            ThreadId = emailMessage.ThreadId,
-            Subject = emailMessage.Subject,
-            From = emailMessage.From,
-            To = emailMessage.To,
-            ReceivedDate = emailMessage.ReceivedDate,
-            Body = "サニタイズされた本文",
-            PlainTextBody = "プレーンテキスト本文",
-            IsRead = emailMessage.IsRead,
-            IsImportant = emailMessage.IsImportant
-        };
+            // Arrange
+            var request = new GetEmailsRequestDto
+            {
+                Query            = "has:attachment",
+                LabelIds         = new[] { "INBOX", "IMPORTANT" },
+                MaxResults       = 25,
+                PageToken        = "next_page_token",
+                IncludeSpamTrash = true
+            };
 
-        _mockEmailRepository
-            .Setup(x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { emailMessage });
+            _mockEmailRepository
+                .Setup(expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(value: new GmailMessage[0]);
 
-        _mockDomainService
-            .Setup(x => x.SanitizeEmailContentAsync(It.IsAny<EmailMessage>()))
-            .ReturnsAsync(sanitizedEmail);
+            // Act
+            await _useCase.ExecuteAsync(request: request);
 
-        // Act
-        var result = await _useCase.ExecuteAsync(request);
+            // Assert
+            _mockEmailRepository.Verify(
+                expression: x => x.GetMessagesAsync(
+                    It.Is<EmailQuery>(q =>
+                                          (q.Query == "has:attachment")                             &&
+                                          q.LabelIds!.SequenceEqual(new[] { "INBOX", "IMPORTANT" }) &&
+                                          (q.MaxResults       == 25)                                &&
+                                          (q.PageToken        == "next_page_token")                 &&
+                                          (q.IncludeSpamTrash == true)
+                    ),
+                    It.IsAny<CancellationToken>()
+                ),
+                times: Times.Once
+            );
+        }
 
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Emails, Has.Count.EqualTo(1));
-        Assert.That(result.Emails[0].Id, Is.EqualTo("msg123"));
-        Assert.That(result.Emails[0].Subject, Is.EqualTo("テストメール"));
-        Assert.That(result.Emails[0].From, Is.EqualTo("test@example.com"));
-        Assert.That(result.Emails[0].Body, Is.EqualTo("サニタイズされた本文"));
-        Assert.That(result.Emails[0].PlainTextBody, Is.EqualTo("プレーンテキスト本文"));
-
-        _mockEmailRepository.Verify(
-            x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()),
-            Times.Once);
-        _mockDomainService.Verify(
-            x => x.SanitizeEmailContentAsync(It.IsAny<EmailMessage>()),
-            Times.Once);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_クエリパラメータ_リポジトリに正しく渡される()
-    {
-        // Arrange
-        var request = new GetEmailsRequestDto
+        [Test]
+        public async Task ExecuteAsync_複数のメール_すべてサニタイズされる()
         {
-            Query = "has:attachment",
-            LabelIds = new[] { "INBOX", "IMPORTANT" },
-            MaxResults = 25,
-            PageToken = "next_page_token",
-            IncludeSpamTrash = true
-        };
+            // Arrange
+            var request = new GetEmailsRequestDto { MaxResults = 2 };
 
-        _mockEmailRepository
-            .Setup(x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new EmailMessage[0]);
+            var email1 = new GmailMessage(
+                id: "msg1",
+                threadId: "thread1",
+                subject: "メール1",
+                from: "sender1@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: DateTime.Now,
+                body: "本文1",
+                isRead: false,
+                isImportant: false,
+                labels: new(),
+                attachments: new()
+            );
 
-        // Act
-        await _useCase.ExecuteAsync(request);
+            var email2 = new GmailMessage(
+                id: "msg2",
+                threadId: "thread2",
+                subject: "メール2",
+                from: "sender2@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: DateTime.Now,
+                body: "本文2",
+                isRead: false,
+                isImportant: false,
+                labels: new(),
+                attachments: new()
+            );
 
-        // Assert
-        _mockEmailRepository.Verify(
-            x => x.GetMessagesAsync(
-                It.Is<EmailQuery>(q =>
-                    q.Query == "has:attachment" &&
-                    q.LabelIds!.SequenceEqual(new[] { "INBOX", "IMPORTANT" }) &&
-                    q.MaxResults == 25 &&
-                    q.PageToken == "next_page_token" &&
-                    q.IncludeSpamTrash == true),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
+            var sanitizedEmail1 = new GmailMessage(
+                id: "msg1",
+                threadId: "thread1",
+                subject: "メール1",
+                from: "sender1@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: DateTime.Now,
+                body: "サニタイズ済み1",
+                isRead: false,
+                isImportant: false,
+                labels: new(),
+                attachments: new()
+            );
 
-    [Test]
-    public async Task ExecuteAsync_複数のメール_すべてサニタイズされる()
-    {
-        // Arrange
-        var request = new GetEmailsRequestDto { MaxResults = 2 };
+            var sanitizedEmail2 = new GmailMessage(
+                id: "msg2",
+                threadId: "thread2",
+                subject: "メール2",
+                from: "sender2@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: DateTime.Now,
+                body: "サニタイズ済み2",
+                isRead: false,
+                isImportant: false,
+                labels: new(),
+                attachments: new()
+            );
 
-        var email1 = new EmailMessage { Id = "msg1", Subject = "メール1" };
-        var email2 = new EmailMessage { Id = "msg2", Subject = "メール2" };
+            _mockEmailRepository
+                .Setup(expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(value: new[] { email1, email2 });
 
-        var sanitizedEmail1 = new EmailMessage { Id = "msg1", Subject = "メール1", Body = "サニタイズ済み1" };
-        var sanitizedEmail2 = new EmailMessage { Id = "msg2", Subject = "メール2", Body = "サニタイズ済み2" };
+            _mockDomainService
+                .Setup(expression: x => x.SanitizeEmailContentAsync(email1))
+                .ReturnsAsync(value: sanitizedEmail1);
+            _mockDomainService
+                .Setup(expression: x => x.SanitizeEmailContentAsync(email2))
+                .ReturnsAsync(value: sanitizedEmail2);
 
-        _mockEmailRepository
-            .Setup(x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { email1, email2 });
+            // Act
+            var result = await _useCase.ExecuteAsync(request: request);
 
-        _mockDomainService
-            .Setup(x => x.SanitizeEmailContentAsync(email1))
-            .ReturnsAsync(sanitizedEmail1);
-        _mockDomainService
-            .Setup(x => x.SanitizeEmailContentAsync(email2))
-            .ReturnsAsync(sanitizedEmail2);
+            // Assert
+            Assert.That(actual: result.Emails, expression: Has.Count.EqualTo(expected: 2));
+            Assert.That(actual: result.Emails[index: 0].Id, expression: Is.EqualTo(expected: "msg1"));
+            Assert.That(actual: result.Emails[index: 0].Body, expression: Is.EqualTo(expected: "サニタイズ済み1"));
+            Assert.That(actual: result.Emails[index: 1].Id, expression: Is.EqualTo(expected: "msg2"));
+            Assert.That(actual: result.Emails[index: 1].Body, expression: Is.EqualTo(expected: "サニタイズ済み2"));
 
-        // Act
-        var result = await _useCase.ExecuteAsync(request);
+            _mockDomainService.Verify(
+                expression: x => x.SanitizeEmailContentAsync(It.IsAny<GmailMessage>()),
+                times: Times.Exactly(callCount: 2)
+            );
+        }
 
-        // Assert
-        Assert.That(result.Emails, Has.Count.EqualTo(2));
-        Assert.That(result.Emails[0].Id, Is.EqualTo("msg1"));
-        Assert.That(result.Emails[0].Body, Is.EqualTo("サニタイズ済み1"));
-        Assert.That(result.Emails[1].Id, Is.EqualTo("msg2"));
-        Assert.That(result.Emails[1].Body, Is.EqualTo("サニタイズ済み2"));
-
-        _mockDomainService.Verify(
-            x => x.SanitizeEmailContentAsync(It.IsAny<EmailMessage>()),
-            Times.Exactly(2));
-    }
-
-    [Test]
-    public async Task ExecuteAsync_ラベル付きメール_ラベルがDTOにマッピングされる()
-    {
-        // Arrange
-        var request = new GetEmailsRequestDto();
-        var label1 = new EmailLabel { Id = "INBOX", Name = "受信トレイ", Type = EmailLabelType.System };
-        var label2 = new EmailLabel { Id = "project", Name = "プロジェクト", Type = EmailLabelType.User };
-
-        var emailMessage = new EmailMessage
+        [Test]
+        public async Task ExecuteAsync_ラベル付きメール_ラベルがDTOにマッピングされる()
         {
-            Id = "msg123",
-            Subject = "ラベル付きメール",
-            Labels = new List<EmailLabel> { label1, label2 }
-        };
+            // Arrange
+            var request = new GetEmailsRequestDto();
+            var label1 = new GmailLabel(
+                id: "INBOX",
+                name: "受信トレイ",
+                type: GmailLabelType.System
+            );
 
-        _mockEmailRepository
-            .Setup(x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { emailMessage });
+            var label2 = new GmailLabel(
+                id: "project",
+                name: "プロジェクト",
+                type: GmailLabelType.User
+            );
 
-        _mockDomainService
-            .Setup(x => x.SanitizeEmailContentAsync(It.IsAny<EmailMessage>()))
-            .ReturnsAsync(emailMessage);
+            var emailMessage = new GmailMessage(
+                id: "msg123",
+                threadId: "thread123",
+                subject: "ラベル付きメール",
+                from: "sender@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: DateTime.Now,
+                body: "ラベル付きメール本文",
+                isRead: false,
+                isImportant: false,
+                labels: new() { label1, label2 },
+                attachments: new()
+            );
 
-        // Act
-        var result = await _useCase.ExecuteAsync(request);
+            _mockEmailRepository
+                .Setup(expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(value: new[] { emailMessage });
 
-        // Assert
-        Assert.That(result.Emails[0].Labels, Has.Count.EqualTo(2));
-        Assert.That(result.Emails[0].Labels[0].Id, Is.EqualTo("INBOX"));
-        Assert.That(result.Emails[0].Labels[0].Name, Is.EqualTo("受信トレイ"));
-        Assert.That(result.Emails[0].Labels[0].Type, Is.EqualTo("System"));
-        Assert.That(result.Emails[0].Labels[1].Id, Is.EqualTo("project"));
-        Assert.That(result.Emails[0].Labels[1].Name, Is.EqualTo("プロジェクト"));
-        Assert.That(result.Emails[0].Labels[1].Type, Is.EqualTo("User"));
-    }
+            _mockDomainService
+                .Setup(expression: x => x.SanitizeEmailContentAsync(It.IsAny<GmailMessage>()))
+                .ReturnsAsync(value: emailMessage);
 
-    [Test]
-    public async Task ExecuteAsync_添付ファイル付きメール_添付ファイルがDTOにマッピングされる()
-    {
-        // Arrange
-        var request = new GetEmailsRequestDto();
-        var attachment1 = new EmailAttachment
+            // Act
+            var result = await _useCase.ExecuteAsync(request: request);
+
+            // Assert
+            Assert.That(actual: result.Emails[index: 0].Labels, expression: Has.Count.EqualTo(expected: 2));
+            Assert.That(actual: result.Emails[index: 0].Labels[index: 0].Id, expression: Is.EqualTo(expected: "INBOX"));
+            Assert.That(
+                actual: result.Emails[index: 0].Labels[index: 0].Name,
+                expression: Is.EqualTo(expected: "受信トレイ")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Labels[index: 0].Type,
+                expression: Is.EqualTo(expected: "System")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Labels[index: 1].Id,
+                expression: Is.EqualTo(expected: "project")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Labels[index: 1].Name,
+                expression: Is.EqualTo(expected: "プロジェクト")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Labels[index: 1].Type,
+                expression: Is.EqualTo(expected: "User")
+            );
+        }
+
+        [Test]
+        public async Task ExecuteAsync_添付ファイル付きメール_添付ファイルがDTOにマッピングされる()
         {
-            Id = "att1",
-            FileName = "document.pdf",
-            MimeType = "application/pdf",
-            Size = 1024,
-            IsInline = false
-        };
-        var attachment2 = new EmailAttachment
+            // Arrange
+            var request = new GetEmailsRequestDto();
+            var attachment1 = new EmailAttachment(
+                id: "att1",
+                fileName: "document.pdf",
+                mimeType: "application/pdf",
+                size: 1024,
+                isInline: false,
+                contentId: null
+            );
+
+            var attachment2 = new EmailAttachment(
+                id: "att2",
+                fileName: "image.jpg",
+                mimeType: "image/jpeg",
+                size: 2048,
+                isInline: true,
+                contentId: "img001"
+            );
+
+            var emailMessage = new GmailMessage(
+                id: "msg123",
+                threadId: "thread123",
+                subject: "添付ファイル付きメール",
+                from: "sender@example.com",
+                to: "recipient@example.com",
+                cc: null,
+                bcc: null,
+                receivedDate: DateTime.Now,
+                body: "添付ファイル付きメール本文",
+                isRead: false,
+                isImportant: false,
+                labels: new(),
+                attachments: new() { attachment1, attachment2 }
+            );
+
+            _mockEmailRepository
+                .Setup(expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(value: new[] { emailMessage });
+
+            _mockDomainService
+                .Setup(expression: x => x.SanitizeEmailContentAsync(It.IsAny<GmailMessage>()))
+                .ReturnsAsync(value: emailMessage);
+
+            // Act
+            var result = await _useCase.ExecuteAsync(request: request);
+
+            // Assert
+            Assert.That(actual: result.Emails[index: 0].Attachments, expression: Has.Count.EqualTo(expected: 2));
+            Assert.That(
+                actual: result.Emails[index: 0].Attachments[index: 0].Id,
+                expression: Is.EqualTo(expected: "att1")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Attachments[index: 0].FileName,
+                expression: Is.EqualTo(expected: "document.pdf")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Attachments[index: 0].MimeType,
+                expression: Is.EqualTo(expected: "application/pdf")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Attachments[index: 0].Size,
+                expression: Is.EqualTo(expected: 1024)
+            );
+            Assert.That(actual: result.Emails[index: 0].Attachments[index: 0].IsInline, expression: Is.False);
+            Assert.That(actual: result.Emails[index: 0].Attachments[index: 0].ContentId, expression: Is.Null);
+
+            Assert.That(
+                actual: result.Emails[index: 0].Attachments[index: 1].Id,
+                expression: Is.EqualTo(expected: "att2")
+            );
+            Assert.That(
+                actual: result.Emails[index: 0].Attachments[index: 1].ContentId,
+                expression: Is.EqualTo(expected: "img001")
+            );
+            Assert.That(actual: result.Emails[index: 0].Attachments[index: 1].IsInline, expression: Is.True);
+        }
+
+        [Test]
+        public async Task ExecuteAsync_空の結果_空のリストが返される()
         {
-            Id = "att2",
-            FileName = "image.jpg",
-            MimeType = "image/jpeg",
-            Size = 2048,
-            IsInline = true,
-            ContentId = "img001"
-        };
+            // Arrange
+            var request = new GetEmailsRequestDto();
 
-        var emailMessage = new EmailMessage
-        {
-            Id = "msg123",
-            Subject = "添付ファイル付きメール",
-            Attachments = new List<EmailAttachment> { attachment1, attachment2 }
-        };
+            _mockEmailRepository
+                .Setup(expression: x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(value: new GmailMessage[0]);
 
-        _mockEmailRepository
-            .Setup(x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new[] { emailMessage });
+            // Act
+            var result = await _useCase.ExecuteAsync(request: request);
 
-        _mockDomainService
-            .Setup(x => x.SanitizeEmailContentAsync(It.IsAny<EmailMessage>()))
-            .ReturnsAsync(emailMessage);
-
-        // Act
-        var result = await _useCase.ExecuteAsync(request);
-
-        // Assert
-        Assert.That(result.Emails[0].Attachments, Has.Count.EqualTo(2));
-        Assert.That(result.Emails[0].Attachments[0].Id, Is.EqualTo("att1"));
-        Assert.That(result.Emails[0].Attachments[0].FileName, Is.EqualTo("document.pdf"));
-        Assert.That(result.Emails[0].Attachments[0].MimeType, Is.EqualTo("application/pdf"));
-        Assert.That(result.Emails[0].Attachments[0].Size, Is.EqualTo(1024));
-        Assert.That(result.Emails[0].Attachments[0].IsInline, Is.False);
-        Assert.That(result.Emails[0].Attachments[0].ContentId, Is.Null);
-
-        Assert.That(result.Emails[0].Attachments[1].Id, Is.EqualTo("att2"));
-        Assert.That(result.Emails[0].Attachments[1].ContentId, Is.EqualTo("img001"));
-        Assert.That(result.Emails[0].Attachments[1].IsInline, Is.True);
-    }
-
-    [Test]
-    public async Task ExecuteAsync_空の結果_空のリストが返される()
-    {
-        // Arrange
-        var request = new GetEmailsRequestDto();
-
-        _mockEmailRepository
-            .Setup(x => x.GetMessagesAsync(It.IsAny<EmailQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new EmailMessage[0]);
-
-        // Act
-        var result = await _useCase.ExecuteAsync(request);
-
-        // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Emails, Is.Empty);
-        Assert.That(result.NextPageToken, Is.Null);
+            // Assert
+            Assert.That(actual: result, expression: Is.Not.Null);
+            Assert.That(actual: result.Emails, expression: Is.Empty);
+            Assert.That(actual: result.NextPageToken, expression: Is.Null);
+        }
     }
 }

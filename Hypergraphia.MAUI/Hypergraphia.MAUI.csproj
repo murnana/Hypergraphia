@@ -39,22 +39,22 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <AndroidSupportedAbis></AndroidSupportedAbis>
-      <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
-      <AndroidLinkTool></AndroidLinkTool>
-      <MtouchNoSymbolStrip>true</MtouchNoSymbolStrip>
-      <CodesignKey>iPhone Developer</CodesignKey>
-      <MtouchDebug>true</MtouchDebug>
-      <OptimizePNGs>true</OptimizePNGs>
-      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AndroidSupportedAbis></AndroidSupportedAbis>
+        <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
+        <AndroidLinkTool></AndroidLinkTool>
+        <MtouchNoSymbolStrip>true</MtouchNoSymbolStrip>
+        <CodesignKey>iPhone Developer</CodesignKey>
+        <MtouchDebug>true</MtouchDebug>
+        <OptimizePNGs>true</OptimizePNGs>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <AndroidSupportedAbis></AndroidSupportedAbis>
-      <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
-      <AndroidLinkTool></AndroidLinkTool>
-      <OptimizePNGs>true</OptimizePNGs>
-      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <AndroidSupportedAbis></AndroidSupportedAbis>
+        <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
+        <AndroidLinkTool></AndroidLinkTool>
+        <OptimizePNGs>true</OptimizePNGs>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
@@ -82,7 +82,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Hypergraphia.Core\Hypergraphia.Core.csproj" />
+        <ProjectReference Include="..\Hypergraphia.Core\Hypergraphia.Core.csproj"/>
     </ItemGroup>
 
 </Project>

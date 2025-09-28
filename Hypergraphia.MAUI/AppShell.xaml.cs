@@ -1,7 +1,10 @@
-﻿namespace Hypergraphia.MAUI;
-
-public partial class AppShell : Shell {
-    public AppShell() {
-        InitializeComponent();
+﻿namespace Hypergraphia.MAUI
+{
+    public partial class AppShell : Shell
+    {
+        public AppShell()
+        {
+            InitializeComponent();
+        }
     }
 }
