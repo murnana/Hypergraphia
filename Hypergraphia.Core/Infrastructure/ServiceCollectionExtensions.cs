@@ -49,10 +49,32 @@ namespace Hypergraphia.Core.Infrastructure
                     var gmailConfig = provider.GetRequiredService<IOptions<GmailConfiguration>>().Value;
                     var logger      = provider.GetRequiredService<ILogger<GmailRepository>>();
 
-                    var credential = GoogleCredential.FromFile(path: gmailConfig.CredentialsPath)
-                                                     .CreateScoped(scopes: gmailConfig.Scopes);
+                    // 認証ファイルの存在確認
+                    if (!File.Exists(path: gmailConfig.CredentialsPath))
+                    {
+                        var errorMessage = $"Gmail認証ファイルが見つかりません: {gmailConfig.CredentialsPath}\n" +
+                                          "以下の手順でGmail APIの認証ファイルを作成してください:\n" +
+                                          "1. Google Cloud Consoleでプロジェクトを作成\n" +
+                                          "2. Gmail APIを有効化\n" +
+                                          "3. 認証情報を作成してJSONファイルをダウンロード\n" +
+                                          "4. ファイルを指定されたパスに配置";
 
-                    return new GmailRepository(credential: credential, logger: logger);
+                        logger.LogError(message: errorMessage);
+                        throw new FileNotFoundException(errorMessage, gmailConfig.CredentialsPath);
+                    }
+
+                    try
+                    {
+                        var credential = GoogleCredential.FromFile(path: gmailConfig.CredentialsPath)
+                                                         .CreateScoped(scopes: gmailConfig.Scopes);
+
+                        return new GmailRepository(credential: credential, logger: logger);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(exception: ex, message: "Gmail認証の初期化に失敗しました: {CredentialsPath}", gmailConfig.CredentialsPath);
+                        throw;
+                    }
                 }
             );
 
