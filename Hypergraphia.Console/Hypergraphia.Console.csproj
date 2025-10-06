@@ -34,9 +34,6 @@
         <None Update="appsettings.Development.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="gmail-credentials.json.sample">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
     </ItemGroup>
 
 </Project>

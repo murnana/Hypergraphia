@@ -1,0 +1,8 @@
+{
+  "Hypergraphia": {
+    "Notion": {
+      "ApiToken": "YOUR_NOTION_API_TOKEN_HERE",
+      "DefaultDatabaseId": "YOUR_NOTION_DATABASE_ID_HERE"
+    }
+  }
+}

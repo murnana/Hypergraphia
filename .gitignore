@@ -438,3 +438,21 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+###############################################################################
+# Credentials and Secrets
+###############################################################################
+# Google API credentials
+**/credentials.json
+**/gmail-credentials.json
+**/token.json
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Other credential files
+**/appsettings.Development.json
+**/appsettings.notion.json
+**/secrets.json
