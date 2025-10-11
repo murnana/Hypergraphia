@@ -79,6 +79,16 @@ dotnet publish Hypergraphia.MAUI -c Release -f net8.0-android
 - **Test Structure**: Use AAA pattern (Arrange, Act, Assert) for test organization
 - **Test Naming**: Use descriptive Japanese test method names that explain the scenario being tested
 
+### Documentation Maintenance
+
+- **IMPORTANT**: When making changes that affect setup procedures or user operations, **always update the corresponding documentation**
+- Relevant documentation files that may need updates:
+  - `docs/gmail-api-setup.md` - Gmail API authentication setup
+  - `docs/development/console-setup.md` - Console application development setup
+  - Configuration files (appsettings.json, etc.)
+  - README files in affected directories
+- Keep documentation in sync with code changes to ensure users have accurate setup instructions
+
 ## Project-Specific Notes
 
 ### MAUI Project
