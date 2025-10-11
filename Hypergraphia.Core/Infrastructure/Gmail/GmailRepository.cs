@@ -22,7 +22,7 @@ namespace Hypergraphia.Core.Infrastructure.Gmail
         /// </summary>
         /// <param name="credential">Gmail API認証情報</param>
         /// <param name="logger">ロガー</param>
-        public GmailRepository(GoogleCredential credential, ILogger<GmailRepository> logger)
+        public GmailRepository(ICredential credential, ILogger<GmailRepository> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(paramName: nameof(logger));
 

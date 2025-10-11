@@ -1,6 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Util.Store;
 using Hypergraphia.Core.Application.UseCases;
 using Hypergraphia.Core.Domain.Entities;
 using Hypergraphia.Core.Domain.Repositories;
@@ -56,8 +59,8 @@ namespace Hypergraphia.Core.Infrastructure
                                           "以下の手順でGmail APIの認証ファイルを作成してください:\n" +
                                           "1. Google Cloud Consoleでプロジェクトを作成\n" +
                                           "2. Gmail APIを有効化\n" +
-                                          "3. 認証情報を作成してJSONファイルをダウンロード\n" +
-                                          "4. ファイルを指定されたパスに配置";
+                                          "3. 認証情報を作成（アプリケーションの種類：デスクトップアプリ）\n" +
+                                          "4. JSONファイルをダウンロードして指定されたパスに配置";
 
                         logger.LogError(message: errorMessage);
                         throw new FileNotFoundException(errorMessage, gmailConfig.CredentialsPath);
@@ -65,8 +68,18 @@ namespace Hypergraphia.Core.Infrastructure
 
                     try
                     {
-                        var credential = GoogleCredential.FromFile(path: gmailConfig.CredentialsPath)
-                                                         .CreateScoped(scopes: gmailConfig.Scopes);
+                        // OAuth 2.0 デスクトップアプリケーション用の認証フロー
+                        using var stream = new FileStream(path: gmailConfig.CredentialsPath, mode: FileMode.Open, access: FileAccess.Read);
+
+                        var credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                            clientSecretsStream: stream,
+                            scopes: gmailConfig.Scopes,
+                            user: "user",
+                            taskCancellationToken: CancellationToken.None,
+                            dataStore: new FileDataStore(folder: "gmail-token.json", fullPath: true)
+                        ).Result;
+
+                        logger.LogInformation(message: "Gmail認証が完了しました");
 
                         return new GmailRepository(credential: credential, logger: logger);
                     }

@@ -102,16 +102,15 @@ dotnet workload restore
 
 ## Gmail API 認証設定
 
-Gmail API を使用するには、Google Cloud Platform で認証情報を作成する必要があります。
+Gmail API を使用するには、Google Cloud Platform で OAuth 2.0 デスクトップアプリの認証情報を作成する必要があります。
 
 詳細な手順については、**[Gmail API セットアップガイド](../gmail-api-setup.md)** を参照してください。
 
 ### クイック セットアップ手順
 
-1. **Gmail API 認証情報の作成**
+1. **OAuth 2.0 クライアント ID の作成**
    - [Gmail API セットアップガイド](../gmail-api-setup.md)の手順に従って認証情報を作成
-   - 個人用 Gmail: OAuth 2.0 クライアント ID を作成
-   - Google Workspace: サービス アカウントを作成し、ドメイン全体の委任を設定
+   - **重要**: アプリケーションの種類は「**デスクトップ アプリ**」を選択
 
 2. **認証情報ファイルの配置**
 
@@ -123,7 +122,19 @@ Gmail API を使用するには、Google Cloud Platform で認証情報を作成
 
    配置先: `Hypergraphia.Console/gmail-credentials.json`
 
-3. **必要な権限スコープ**
+3. **初回認証フロー**
+
+   アプリケーションを初めて実行すると、ブラウザが開いて Google アカウントでの認証が求められます：
+
+   ```bash
+   dotnet run --project Hypergraphia.Console
+   ```
+
+   - ブラウザで Gmail へのアクセスを許可
+   - 認証成功後、アクセストークンは `gmail-token.json/` ディレクトリに自動保存されます
+   - 以降の実行では、保存されたトークンが再利用され、ブラウザは開きません
+
+4. **必要な権限スコープ**
 
    このアプリケーションは以下のスコープを使用します：
    ```
@@ -133,8 +144,9 @@ Gmail API を使用するには、Google Cloud Platform で認証情報を作成
    読み取り専用のため、メールの変更や削除はできません。
 
 ⚠️ **セキュリティ重要**:
-- `gmail-credentials.json` は `.gitignore` に含まれています
-- このファイルを Git にコミットしないでください
+- `gmail-credentials.json` - OAuth 2.0 クライアント ID 認証情報（`.gitignore` に含まれています）
+- `gmail-token.json/` - Gmail OAuth 認証トークン（初回認証後に自動生成、`.gitignore` に含まれています）
+- これらのファイルを Git にコミットしないでください
 - ファイルには機密情報が含まれているため、他人と共有しないでください
 
 ### appsettings.json の確認
@@ -247,11 +259,29 @@ dotnet publish Hypergraphia.Console -c Release
 ### よくある問題
 
 #### 1. Gmail API 認証エラー
-**症状**: \"Credentials not found\" エラー
+
+**症状**: "Gmail認証ファイルが見つかりません" エラー
 **解決策**:
-- `gmail-credentials.json` ファイルが存在することを確認
-- JSON 形式が正しいことを確認
+- `gmail-credentials.json` ファイルが `Hypergraphia.Console/` ディレクトリに存在することを確認
+- ビルド時にファイルが出力ディレクトリにコピーされているか確認
 - ファイルパスが `appsettings.json` の設定と一致することを確認
+
+**症状**: "Unrecognized credential type" エラー
+**解決策**:
+- OAuth 2.0 クライアント ID（**デスクトップアプリ**）の認証情報を使用していることを確認
+- JSON ファイルに `installed` キーが含まれているか確認
+- サービスアカウント形式ではなく、デスクトップアプリ形式であることを確認
+
+**症状**: ブラウザが開かない
+**解決策**:
+- デフォルトブラウザが正しく設定されているか確認
+- ファイアウォールがブラウザの起動をブロックしていないか確認
+- コンソールに表示される認証 URL を手動でブラウザで開く
+
+**症状**: トークンの有効期限切れ
+**解決策**:
+- `gmail-token.json/` ディレクトリを削除
+- アプリケーションを再実行して再認証
 
 #### 2. Notion API エラー
 **症状**: \"Unauthorized\" エラー

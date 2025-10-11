@@ -445,7 +445,8 @@ google-services.json
 # Google API credentials
 **/credentials.json
 **/gmail-credentials.json
-**/token.json
+**/gmail-token.json
+**/gmail-token.json/
 
 # Environment files with secrets
 .env
