@@ -122,3 +122,4 @@ Key dependencies managed via Dependabot:
 - Coverlet for code coverage
 - Microsoft.Maui.Controls for UI
 - Microsoft.Extensions.Logging.Debug for development logging
+- to memorize
