@@ -457,3 +457,8 @@ google-services.json
 **/appsettings.Development.json
 **/appsettings.notion.json
 **/secrets.json
+
+###############################################################################
+# Claude Code local settings
+###############################################################################
+.claude/settings.local.json
