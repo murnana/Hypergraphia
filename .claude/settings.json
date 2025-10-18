@@ -1,7 +1,19 @@
 {
   "includeCoAuthoredBy": true,
   "permissions": {
-    "disableBypassPermissionsMode": "disable"
+    "disableBypassPermissionsMode": "disable",
+      "allow": [
+        "Bash(git log:*)",
+        "Bash(git status:*)",
+        "Bash(git diff:*)"
+      ],
+      "ask": [
+        "Read(**/appsettings.*.json)"
+      ],
+      "deny": [
+        "Read(**/gmail-credentials.json)",
+        "Read(**/appsettings.notion.json)"
+      ]
   },
   "disableAllHooks": true,
   "enableAllProjectMcpServers": false
