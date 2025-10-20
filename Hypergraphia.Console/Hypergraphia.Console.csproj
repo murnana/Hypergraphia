@@ -18,7 +18,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="9.0.9" />
+      <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="9.0.10" />
       <ProjectReference Include="..\Hypergraphia.Core\Hypergraphia.Core.csproj" />
     </ItemGroup>
 
